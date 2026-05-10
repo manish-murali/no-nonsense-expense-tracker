@@ -1,0 +1,3 @@
+pdfplumber
+textual>=0.70.0
+httpx

@@ -1,0 +1,20 @@
+tracker.db
+config.json
+categories.json
+aliases.json
+ai_config.json
+
+# Statement PDFs — keep folder structure, ignore the files
+statements/**/*.pdf
+statements/**/*.PDF
+
+__pycache__/
+*.pyc
+*.pyo
+.env
+.DS_Store
+*.egg-info/
+dist/
+build/
+.venv/
+venv/

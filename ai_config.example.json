@@ -1,0 +1,7 @@
+{
+  "_comment": "Copy this file to ai_config.json and fill in your settings.",
+  "model":       "gemma3:4b",
+  "endpoint":    "http://localhost:11434",
+  "temperature": 0.1,
+  "timeout":     60
+}
