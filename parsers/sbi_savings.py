@@ -24,6 +24,16 @@ def _parse_details(details: str) -> dict:
         result["direction"]        = "CREDIT" if "DEP TFR" in details else "DEBIT"
         return result
 
+    # DEP TFR IMPS/ref/counterparty/note  (no trailing /IMPS)
+    m = re.search(r"IMPS/(\d+)/([^/]+)/(.+)", details)
+    if m:
+        result["transaction_type"] = "IMPS"
+        result["reference_number"] = m.group(1)
+        result["counterparty"]     = m.group(2).strip()
+        result["note"]             = m.group(3).strip()
+        result["direction"]        = "CREDIT" if "DEP" in details else "DEBIT"
+        return result
+
     m = re.search(r"UPI/(DR|CR)/(\d+)/([^/]+)/([A-Z0-9]+)/([^/]+)/", details)
     if m:
         result["transaction_type"] = "UPI"
