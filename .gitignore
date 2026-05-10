@@ -9,6 +9,8 @@ ai_config.json
 # Statement PDFs — keep folder structure, ignore the files
 statements/**/*.pdf
 statements/**/*.PDF
+data/**/*.pdf
+data/**/*.PDF
 
 __pycache__/
 *.pyc
