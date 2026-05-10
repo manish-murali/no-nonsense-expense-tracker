@@ -1,4 +1,6 @@
 tracker.db
+tracker.db-shm
+tracker.db-wal
 config.json
 categories.json
 aliases.json
