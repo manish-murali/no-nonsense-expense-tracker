@@ -16,6 +16,7 @@ def _parse_details(details: str) -> dict:
         "note":             None,
     }
 
+    # ── IMPS ──────────────────────────────────────────────────────────
     m = re.search(r"IMPS/(\d+)/([^/]+)/IMPS", details)
     if m:
         result["transaction_type"] = "IMPS"
@@ -30,20 +31,48 @@ def _parse_details(details: str) -> dict:
         result["transaction_type"] = "IMPS"
         result["reference_number"] = m.group(1)
         result["counterparty"]     = m.group(2).strip()
-        result["note"]             = m.group(3).strip()
+        result["note"]             = re.sub(r'\s+\d{10,}\s+AT\s+.+$', '', m.group(3)).strip()
         result["direction"]        = "CREDIT" if "DEP" in details else "DEBIT"
         return result
 
-    m = re.search(r"UPI/(DR|CR)/(\d+)/([^/]+)/([A-Z0-9]+)/([^/]+)/", details)
+    # ── UPI DR/CR ──────────────────────────────────────────────────────
+    # Handles: UPI/DR/.., WDL TFR UPI/DR/.., DEP TFR UPI/CR/..
+    # Direction comes from DR/CR in the UPI string (not from DEP/WDL prefix)
+    m = re.search(r"UPI/(DR|CR)/(\d+)/(.+)", details)
     if m:
+        direction_code = m.group(1)
+        rest = re.sub(r'\s+\d{10,}\s+AT\s+.+$', '', m.group(3)).strip()
+        parts = [p.strip() for p in rest.split('/')]
         result["transaction_type"] = "UPI"
-        result["direction"]        = "DEBIT" if m.group(1) == "DR" else "CREDIT"
         result["reference_number"] = m.group(2)
-        result["counterparty"]     = m.group(3).strip()
-        result["counterparty_bank"]= m.group(4)
-        result["upi_id"]           = m.group(5).strip()
+        result["direction"]        = "CREDIT" if direction_code == "CR" else "DEBIT"
+        result["counterparty"]     = parts[0] if parts else None
+        result["counterparty_bank"]= parts[1] if len(parts) > 1 else None
+        result["upi_id"]           = parts[2] if len(parts) > 2 else None
+        result["note"]             = parts[3] if len(parts) > 3 else None
         return result
 
+    # UPI refund / reversal
+    m = re.search(r"UPI/(REF|REV)/(\d+)", details)
+    if m:
+        result["transaction_type"] = "UPI"
+        result["reference_number"] = m.group(2)
+        result["direction"]        = "CREDIT"
+        result["note"]             = f"UPI {m.group(1)}"
+        return result
+
+    # ── NEFT with asterisk delimiter ───────────────────────────────────
+    # e.g. DEP TFR NEFT*ICIC0099999*ICIN218642790412*CENTRAL DEPOSIT
+    m = re.search(r"NEFT\*([^*]+)\*([^*\s]+)[^*]*\*(.+?)(?:\s+\d{10,}\s+AT\s+.+)?$", details)
+    if m:
+        result["transaction_type"]  = "NEFT"
+        result["counterparty_bank"] = m.group(1).strip()
+        result["reference_number"]  = m.group(2).strip()
+        result["counterparty"]      = m.group(3).strip()
+        result["direction"]         = "CREDIT" if "DEP" in details else "DEBIT"
+        return result
+
+    # ── NEFT / RTGS with dash or space ────────────────────────────────
     m = re.search(r"(NEFT|RTGS)[- /](\S+)", details, re.IGNORECASE)
     if m:
         result["transaction_type"] = m.group(1).upper()
@@ -51,6 +80,15 @@ def _parse_details(details: str) -> dict:
         result["direction"]        = "CREDIT" if "DEP" in details else "DEBIT"
         return result
 
+    # ── RTGS with UTR NO ──────────────────────────────────────────────
+    m = re.search(r"RTGS\s+UTR\s+NO[:\s]+(\S+)", details, re.IGNORECASE)
+    if m:
+        result["transaction_type"] = "RTGS"
+        result["reference_number"] = m.group(1)
+        result["direction"]        = "CREDIT" if "DEP" in details else "DEBIT"
+        return result
+
+    # ── ACH / CEMTEX ──────────────────────────────────────────────────
     m = re.search(r"ACHCr\s+(\S+)\s+(.*)", details)
     if m:
         result["transaction_type"] = "ACH_CREDIT"
@@ -67,20 +105,54 @@ def _parse_details(details: str) -> dict:
         result["counterparty"]     = m.group(2).strip()
         return result
 
+    # ── Self / internal transfer ───────────────────────────────────────
+    # e.g. DEP TFR 0044856994954 OF Mr. MANISH MURALI C AT 02207 ...
+    m = re.search(r"(DEP|WDL) TFR (\d{10,}) OF (.+?)(?:\s+AT\s+.+)?$", details)
+    if m:
+        result["transaction_type"] = "TRANSFER"
+        result["reference_number"] = m.group(2)
+        result["counterparty"]     = m.group(3).strip()
+        result["direction"]        = "CREDIT" if m.group(1) == "DEP" else "DEBIT"
+        return result
+
+    # ── Internet banking ──────────────────────────────────────────────
+    m = re.search(r"INB\s+(.+?)(?:\s+\d{10,}\s+AT\s+.+)?$", details)
+    if m:
+        result["transaction_type"] = "INB"
+        result["direction"]        = "CREDIT" if "DEP" in details else "DEBIT"
+        result["note"]             = m.group(1).strip()
+        return result
+
+    # ── Cash withdrawal ───────────────────────────────────────────────
+    if re.search(r"CASH WITHDRAWAL", details, re.IGNORECASE):
+        result["transaction_type"] = "CASH"
+        result["direction"]        = "DEBIT"
+        result["note"]             = details
+        return result
+
+    # ── ATM ───────────────────────────────────────────────────────────
     if "ATMCard" in details or "ATM" in details:
         result["transaction_type"] = "ATM_CHARGE"
         result["direction"]        = "DEBIT"
         result["note"]             = details
         return result
 
+    # ── Interest ──────────────────────────────────────────────────────
     if re.search(r"INTERES", details, re.IGNORECASE):
         result["transaction_type"] = "INTEREST"
         result["direction"]        = "CREDIT"
         result["note"]             = "Interest credit"
         return result
 
-    result["direction"] = "CREDIT" if "DEP" in details or "CR" in details else "DEBIT"
-    result["note"]      = details
+    # ── Catch-all ─────────────────────────────────────────────────────
+    # Use explicit WDL/DEP prefix; avoid false positives from "CR" in merchant names
+    if details.startswith("WDL"):
+        result["direction"] = "DEBIT"
+    elif details.startswith("DEP"):
+        result["direction"] = "CREDIT"
+    else:
+        result["direction"] = "DEBIT"
+    result["note"] = details
     return result
 
 
