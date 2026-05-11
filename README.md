@@ -352,7 +352,7 @@ A complete, searchable view of every transaction.
   Click any cell in the Alias, Category, or Subcategory column to edit it.
   The edit panel at the bottom activates with the appropriate input.
 
-  - Alias edit:       Updates ALL transactions with the same counterparty + saves to aliases.json
+  - Alias edit:       Updates ALL transactions with the same counterparty + saves to display_name.json
   - Category edit:    Updates ALL transactions with the same counterparty + saves to categories.json
   - Subcategory edit: Updates ONLY that single transaction
 
@@ -569,7 +569,7 @@ extend it, or contribute to it.
     ├── cli.py                  Command-line interface
     ├── importer.py             PDF → parse → deduplicate → store pipeline
     ├── categorizer.py          Pattern-matching auto-categorisation engine
-    ├── aliases.py              Alias load / apply / save logic
+    ├── display_name.py              Display name load / apply / save logic
     ├── errors.py               Centralised error definitions (AppError + codes)
     │
     ├── parsers/
@@ -604,7 +604,7 @@ extend it, or contribute to it.
     ├── config.json             Account configuration (gitignored)
     ├── tracker.db              SQLite database (gitignored)
     ├── categories.json         Category rules (gitignored)
-    ├── aliases.json            Alias mappings (gitignored)
+    ├── display_name.json            Alias mappings (gitignored)
     ├── ai_config.json          AI model config (gitignored)
     └── ai_config.example.json  Template for ai_config.json (committed)
 
@@ -831,7 +831,7 @@ Each parser is a Python function registered in parsers/__init__.py:
     The app ships with 18 built-in defaults; users add more via CLI or UI.
     Running `python cli.py category apply` re-applies all rules to existing transactions.
 
-### aliases.json (gitignored)
+### display_name.json (gitignored)
 
     {
       "IRCTCTOU":  "IRCTC",
@@ -848,7 +848,7 @@ Each parser is a Python function registered in parsers/__init__.py:
 
 ### .gitignore
 
-    tracker.db, config.json, categories.json, aliases.json, ai_config.json
+    tracker.db, config.json, categories.json, display_name.json, ai_config.json
     statements/**/*.pdf, statements/**/*.PDF
     __pycache__/, *.pyc, .venv/, venv/
 

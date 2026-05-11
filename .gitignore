@@ -3,7 +3,7 @@ tracker.db-shm
 tracker.db-wal
 config.json
 categories.json
-aliases.json
+display_name.json
 ai_config.json
 
 # Statement PDFs — keep folder structure, ignore the files

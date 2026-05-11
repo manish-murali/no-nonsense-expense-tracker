@@ -4,7 +4,7 @@ from textual.widgets import Static, DataTable, Input, Button
 from rich.text import Text
 
 from storage import db
-from aliases import add_alias
+from display_name import add_alias
 from categorizer import add_rule
 from ui.widgets import Card
 
