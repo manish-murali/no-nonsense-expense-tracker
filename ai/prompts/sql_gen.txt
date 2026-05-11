@@ -16,7 +16,7 @@ TABLE: savings_transactions
   credit           REAL    -- amount if CREDIT, else 0
   balance          REAL    -- running account balance
   counterparty     TEXT    -- raw merchant/person name from the bank
-  alias_name       TEXT    -- user-set friendly name (may be NULL)
+  display_name       TEXT    -- user-set friendly name (may be NULL)
   category         TEXT    -- e.g. 'Food & Dining', 'Transport', 'Salary', 'Uncategorized'
   subcategory      TEXT    -- user override for category (may be NULL)
   raw_details      TEXT    -- full raw description from bank statement
@@ -50,15 +50,15 @@ TABLE: accounts
 7. For spending/expenses → direction='DEBIT', use the debit column.
 8. For income/credits    → direction='CREDIT', use the credit column.
 9. To search a merchant  → always use LOWER() on both sides for case-insensitive matching:
-   (LOWER(counterparty) LIKE '%keyword%' OR LOWER(alias_name) LIKE '%keyword%' OR LOWER(raw_details) LIKE '%keyword%')
+   (LOWER(counterparty) LIKE '%keyword%' OR LOWER(display_name) LIKE '%keyword%' OR LOWER(raw_details) LIKE '%keyword%')
    Never use = for text comparisons — always LOWER(...) LIKE '...'.
    When the user gives a multi-word name (e.g. "jayaraman broker"), search EACH word separately:
-   (LOWER(counterparty) LIKE '%jayaraman%' OR LOWER(alias_name) LIKE '%jayaraman%'
-    OR LOWER(counterparty) LIKE '%broker%' OR LOWER(alias_name) LIKE '%broker%')
+   (LOWER(counterparty) LIKE '%jayaraman%' OR LOWER(display_name) LIKE '%jayaraman%'
+    OR LOWER(counterparty) LIKE '%broker%' OR LOWER(display_name) LIKE '%broker%')
 10. CRITICAL parentheses rule: When combining OR with AND, ALWAYS wrap OR conditions in
     parentheses FIRST, then apply AND:
-    CORRECT:   WHERE direction='DEBIT' AND (LOWER(counterparty) LIKE '%x%' OR LOWER(alias_name) LIKE '%x%')
-    WRONG:     WHERE LOWER(counterparty) LIKE '%x%' OR LOWER(alias_name) LIKE '%x%' AND direction='DEBIT'
+    CORRECT:   WHERE direction='DEBIT' AND (LOWER(counterparty) LIKE '%x%' OR LOWER(display_name) LIKE '%x%')
+    WRONG:     WHERE LOWER(counterparty) LIKE '%x%' OR LOWER(display_name) LIKE '%x%' AND direction='DEBIT'
     The direction/date filter must ALWAYS come before the parenthesised OR block.
 10. Effective category   → COALESCE(subcategory, category)
 11. Limit results to 20 rows unless the question asks for more.
@@ -76,17 +76,17 @@ Q: How much did I spend on Zomato?
 SELECT ROUND(SUM(debit), 2) AS total_spent, COUNT(*) AS transactions
 FROM savings_transactions
 WHERE direction='DEBIT'
-  AND (LOWER(counterparty) LIKE '%zomato%' OR LOWER(alias_name) LIKE '%zomato%' OR LOWER(raw_details) LIKE '%zomato%');
+  AND (LOWER(counterparty) LIKE '%zomato%' OR LOWER(display_name) LIKE '%zomato%' OR LOWER(raw_details) LIKE '%zomato%');
 
 Q: How much did I pay to Jayaraman Broker?
 SELECT ROUND(SUM(debit), 2) AS total_spent, COUNT(*) AS transactions
 FROM savings_transactions
 WHERE direction='DEBIT'
-  AND (LOWER(counterparty) LIKE '%jayaraman%' OR LOWER(alias_name) LIKE '%jayaraman%'
-       OR LOWER(counterparty) LIKE '%broker%'  OR LOWER(alias_name) LIKE '%broker%');
+  AND (LOWER(counterparty) LIKE '%jayaraman%' OR LOWER(display_name) LIKE '%jayaraman%'
+       OR LOWER(counterparty) LIKE '%broker%'  OR LOWER(display_name) LIKE '%broker%');
 
 Q: What are my biggest expenses this month?
-SELECT date, COALESCE(alias_name, counterparty) AS merchant, ROUND(debit, 2) AS amount,
+SELECT date, COALESCE(display_name, counterparty) AS merchant, ROUND(debit, 2) AS amount,
        COALESCE(subcategory, category) AS category
 FROM savings_transactions
 WHERE direction='DEBIT'
@@ -96,11 +96,11 @@ LIMIT 10;
 
 Q: What is my monthly salary? / How much salary do I get?
 SELECT strftime('%Y-%m', date_iso) AS month,
-       COALESCE(alias_name, counterparty) AS from_whom,
+       COALESCE(display_name, counterparty) AS from_whom,
        ROUND(SUM(credit), 2) AS salary_received
 FROM savings_transactions
 WHERE direction='CREDIT'
-  AND (counterparty LIKE '%salary%' OR alias_name LIKE '%salary%'
+  AND (counterparty LIKE '%salary%' OR display_name LIKE '%salary%'
        OR raw_details LIKE '%salary%' OR category LIKE '%salary%'
        OR subcategory LIKE '%salary%' OR transaction_type='NEFT')
 GROUP BY month, counterparty
@@ -108,7 +108,7 @@ ORDER BY month DESC
 LIMIT 12;
 
 Q: Show all credits / income I have received
-SELECT date, COALESCE(alias_name, counterparty) AS from_whom,
+SELECT date, COALESCE(display_name, counterparty) AS from_whom,
        ROUND(credit, 2) AS amount, transaction_type,
        COALESCE(subcategory, category) AS category
 FROM savings_transactions
@@ -162,7 +162,7 @@ SELECT ROUND(SUM(debit), 2) AS total_spent, COUNT(*) AS transactions
 FROM savings_transactions
 WHERE direction='DEBIT'
   AND date_iso >= date('now', '-6 months')
-  AND (counterparty LIKE '%phone%' OR alias_name LIKE '%phone%'
+  AND (counterparty LIKE '%phone%' OR display_name LIKE '%phone%'
        OR raw_details LIKE '%phone%' OR category LIKE '%Phone%'
        OR counterparty LIKE '%airtel%' OR counterparty LIKE '%jio%'
        OR counterparty LIKE '%bsnl%' OR counterparty LIKE '%vi%');

@@ -91,7 +91,7 @@ def import_statement(
             raw_cp = txn.get("counterparty")
             alias  = apply_alias(raw_cp)
             # Keep raw counterparty; store alias separately if it differs
-            txn["alias_name"] = alias if alias != raw_cp else None
+            txn["display_name"] = alias if alias != raw_cp else None
             cat = categorize(txn, db_path)
             ok  = db.insert_savings_transaction(txn, account_name, cat, db_path)
         else:

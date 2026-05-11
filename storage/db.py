@@ -71,7 +71,7 @@ _SAVINGS_DDL = """
         reference_number  TEXT,
         note              TEXT,
         raw_details       TEXT,
-        alias_name        TEXT,
+        display_name      TEXT,
         category          TEXT,
         subcategory       TEXT,
         imported_at       TEXT DEFAULT (datetime('now'))
@@ -196,7 +196,7 @@ def _migrate_date_format(conn: sqlite3.Connection) -> None:
 
 
 def _migrate_add_subcategory(conn: sqlite3.Connection) -> None:
-    """One-time migration: add subcategory and alias_name columns if absent."""
+    """One-time migration: add subcategory and display_name columns if absent."""
     cols = [r[1] for r in conn.execute(
         "PRAGMA table_info(savings_transactions)"
     ).fetchall()]
@@ -204,9 +204,14 @@ def _migrate_add_subcategory(conn: sqlite3.Connection) -> None:
         conn.execute(
             "ALTER TABLE savings_transactions ADD COLUMN subcategory TEXT"
         )
-    if "alias_name" not in cols:
+    if "alias_name" in cols:
+        # Rename legacy column to display_name
         conn.execute(
-            "ALTER TABLE savings_transactions ADD COLUMN alias_name TEXT"
+            "ALTER TABLE savings_transactions RENAME COLUMN alias_name TO display_name"
+        )
+    elif "display_name" not in cols:
+        conn.execute(
+            "ALTER TABLE savings_transactions ADD COLUMN display_name TEXT"
         )
     conn.commit()
 
@@ -277,19 +282,19 @@ def insert_savings_transaction(txn: dict, account_name: str,
             (txn_id, bank, account_name, account_number, date, date_iso, value_date,
              transaction_type, direction, amount, debit, credit, balance,
              counterparty, counterparty_bank, upi_id, reference_number,
-             note, raw_details, alias_name, category)
+             note, raw_details, display_name, category)
             VALUES
             (:txn_id, :bank, :account_name, :account_number, :date, :date_iso, :value_date,
              :transaction_type, :direction, :amount, :debit, :credit, :balance,
              :counterparty, :counterparty_bank, :upi_id, :reference_number,
-             :note, :raw_details, :alias_name, :category)
+             :note, :raw_details, :display_name, :category)
         """, {**txn,
               "txn_id":       _make_txn_id(txn, account_name),
               "account_name": account_name,
               "date":         _display_date(txn.get("date", "")),
               "value_date":   _display_date(txn.get("value_date", "")),
               "date_iso":     _normalize_date(txn.get("date", "")),
-              "alias_name":   txn.get("alias_name"),
+              "display_name": txn.get("display_name"),
               "category":     category})
         inserted = conn.execute("SELECT changes()").fetchone()[0]
         conn.commit()
@@ -365,16 +370,16 @@ def is_already_imported(file_hash: str, db_path: Path | None = None) -> bool:
 
 def set_alias_for_counterparty(
     counterparty: str,
-    alias_name: str | None,
+    display_name: str | None,
     db_path: Path | None = None,
 ) -> int:
-    """Set alias_name for ALL savings transactions with this raw counterparty.
+    """Set display_name for ALL savings transactions with this raw counterparty.
     Returns number of rows updated."""
     conn = _connect(db_path)
     try:
         cur = conn.execute(
-            "UPDATE savings_transactions SET alias_name=? WHERE counterparty=?",
-            (alias_name or None, counterparty)
+            "UPDATE savings_transactions SET display_name=? WHERE counterparty=?",
+            (display_name or None, counterparty)
         )
         conn.commit()
         return cur.rowcount
@@ -475,8 +480,8 @@ def get_recent_transactions(limit: int = 15, db_path: Path | None = None) -> lis
                direction, transaction_type,
                amount, debit, credit,
                counterparty,
-               COALESCE(alias_name, counterparty) AS display_name,
-               alias_name,
+               COALESCE(display_name, counterparty) AS merchant_name,
+               display_name,
                category,
                subcategory
         FROM savings_transactions
@@ -486,8 +491,8 @@ def get_recent_transactions(limit: int = 15, db_path: Path | None = None) -> lis
                direction, transaction_type,
                amount, debit, credit,
                NULL AS counterparty,
+               NULL AS merchant_name,
                NULL AS display_name,
-               NULL AS alias_name,
                NULL AS category,
                NULL AS subcategory
         FROM loan_transactions
@@ -574,8 +579,8 @@ def get_all_transactions(account_type: str | None = None,
             SELECT txn_id, date, date_iso, bank, account_name, 'SAVINGS' AS account_type,
                    transaction_type, direction,
                    COALESCE(debit,0) AS debit, COALESCE(credit,0) AS credit,
-                   balance, counterparty, alias_name,
-                   COALESCE(alias_name, counterparty) AS display_name,
+                   balance, counterparty, display_name,
+                   COALESCE(display_name, counterparty) AS merchant_name,
                    category, subcategory,
                    COALESCE(subcategory, category) AS effective_category
             FROM savings_transactions {w}
@@ -588,8 +593,8 @@ def get_all_transactions(account_type: str | None = None,
             SELECT txn_id, date, date_iso, bank, account_name, 'LOAN' AS account_type,
                    transaction_type, direction,
                    COALESCE(debit,0) AS debit, COALESCE(credit,0) AS credit,
-                   balance, NULL AS counterparty, NULL AS alias_name,
-                   NULL AS display_name, NULL AS category,
+                   balance, NULL AS counterparty, NULL AS display_name,
+                   NULL AS merchant_name, NULL AS category,
                    NULL AS subcategory, NULL AS effective_category
             FROM loan_transactions {w}
         """)

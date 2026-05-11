@@ -170,8 +170,8 @@ class OverviewTab(ScrollableContainer):
             amount    = r["credit"] if direction == "CREDIT" else r["debit"]
             amt_str   = f"₹{amount:,.2f}" if amount else "—"
 
-            alias_text = (Text(r["alias_name"], style="yellow")
-                          if r.get("alias_name") else Text("—", style="dim"))
+            alias_text = (Text(r["display_name"], style="yellow")
+                          if r.get("display_name") else Text("—", style="dim"))
 
             cat_text = Text(r.get("category") or "—")
 
@@ -228,12 +228,12 @@ class OverviewTab(ScrollableContainer):
             )
             inp = self.query_one("#overview-edit-input", Input)
             inp.placeholder = "Clean name (e.g. Zomato, Dad, Self Transfer)..."
-            inp.value       = row.get("alias_name") or ""
+            inp.value       = row.get("merchant_name") or ""
             self._set_edit_active(True)
 
         elif col == self._COL_CATEGORY:
             self._edit_mode = "category"
-            cp = (row.get("display_name") or row.get("counterparty") or "—")[:40]
+            cp = (row.get("merchant_name") or row.get("counterparty") or "—")[:40]
             self.query_one("#overview-edit-info", Static).update(
                 f"[bold]Category for:[/] [cyan]{cp}[/]  "
                 f"[dim](updates all rows with this counterparty + saves to categories.json)[/]"
@@ -245,7 +245,7 @@ class OverviewTab(ScrollableContainer):
 
         elif col == self._COL_SUBCATEGORY:
             self._edit_mode = "subcategory"
-            cp = (row.get("display_name") or row.get("counterparty") or "—")[:30]
+            cp = (row.get("merchant_name") or row.get("counterparty") or "—")[:30]
             self.query_one("#overview-edit-info", Static).update(
                 f"[bold]Subcategory:[/] [magenta]{row['date']}  {cp}[/]  "
                 f"[dim](this transaction only)[/]"

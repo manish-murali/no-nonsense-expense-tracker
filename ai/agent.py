@@ -176,7 +176,7 @@ class AIAgent:
 
             # Top counterparties by spend
             top_cp = conn.execute("""
-                SELECT COALESCE(alias_name, counterparty) AS name,
+                SELECT COALESCE(display_name, counterparty) AS name,
                        ROUND(SUM(debit), 0) AS total
                 FROM savings_transactions
                 WHERE direction='DEBIT' AND counterparty IS NOT NULL
@@ -186,7 +186,7 @@ class AIAgent:
 
             # Top credit sources
             top_cr = conn.execute("""
-                SELECT COALESCE(alias_name, counterparty) AS name,
+                SELECT COALESCE(display_name, counterparty) AS name,
                        ROUND(SUM(credit), 0) AS total
                 FROM savings_transactions
                 WHERE direction='CREDIT' AND counterparty IS NOT NULL

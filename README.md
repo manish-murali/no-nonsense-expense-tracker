@@ -639,7 +639,7 @@ All data is stored in a single SQLite file: tracker.db
     reference_number  TEXT
     note              TEXT    Parsed description from raw_details
     raw_details       TEXT    Full unparsed string from bank statement
-    alias_name        TEXT    User-set clean name (NULL if not set)
+    display_name        TEXT    User-set clean name (NULL if not set)
     category          TEXT    Auto-assigned from categories.json rules
     subcategory       TEXT    Manual per-transaction override (NULL if not set)
     imported_at       TEXT    datetime('now') at import time
@@ -647,7 +647,7 @@ All data is stored in a single SQLite file: tracker.db
 ### loan_transactions
 
     Similar to savings_transactions.
-    No counterparty, alias_name, category, subcategory columns.
+    No counterparty, display_name, category, subcategory columns.
     Has extra_data TEXT (JSON) for bank-specific loan metadata.
 
 ### accounts
@@ -839,7 +839,7 @@ Each parser is a Python function registered in parsers/__init__.py:
     }
 
     Applied at import time via apply_alias(counterparty).
-    If alias differs from raw name, alias_name column is set in the DB.
+    If alias differs from raw name, display_name column is set in the DB.
     Raw counterparty is always preserved unchanged.
 
 ### ai_config.json (gitignored)
