@@ -40,7 +40,7 @@ class OverviewTab(ScrollableContainer):
         # Edit panel — same pattern as Transaction Log
         with Horizontal(id="overview-edit-panel"):
             yield Static(
-                "[dim]← Click [yellow]Alias[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]",
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]",
                 id="overview-edit-info"
             )
             yield Input(placeholder="Click a cell to edit...", id="overview-edit-input")
@@ -161,7 +161,7 @@ class OverviewTab(ScrollableContainer):
         table = self.query_one("#recent-table", DataTable)
         table.clear(columns=True)
         table.add_columns("Date", "Account", "Dir", "Type", "Amount",
-                          "Counterparty", "Alias", "Category", "Subcategory")
+                          "Counterparty", "Display Name", "Category", "Subcategory")
 
         self._recent_rows = db.get_recent_transactions(25)
         for r in self._recent_rows:
@@ -258,7 +258,7 @@ class OverviewTab(ScrollableContainer):
         else:
             self._edit_mode = None
             self.query_one("#overview-edit-info", Static).update(
-                "[dim]← Click [yellow]Alias[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]"
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]"
             )
             self.query_one("#overview-edit-input", Input).value = ""
             self._set_edit_active(False)

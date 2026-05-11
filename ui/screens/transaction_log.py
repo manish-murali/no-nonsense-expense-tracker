@@ -30,7 +30,7 @@ class TransactionLogTab(Vertical):
         # Edit panel — always visible, content adapts to clicked column
         with Horizontal(id="txn-edit-panel"):
             yield Static(
-                "[dim]← Click [yellow]Alias[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]",
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]",
                 id="txn-edit-info"
             )
             yield Input(placeholder="Click a cell to edit...", id="subcategory-input")
@@ -72,7 +72,7 @@ class TransactionLogTab(Vertical):
         table.clear(columns=True)
         table.add_columns("Date", "Account", "Acct Type", "Type", "Dir",
                           "Debit", "Credit", "Counterparty",
-                          "Alias", "Category", "Subcategory")
+                          "Display Name", "Category", "Subcategory")
 
         total_debit = total_credit = 0.0
         for r in self._rows:
@@ -188,7 +188,7 @@ class TransactionLogTab(Vertical):
         else:
             self._edit_mode = None
             self.query_one("#txn-edit-info", Static).update(
-                "[dim]← Click [yellow]Alias[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]"
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]"
             )
             self.query_one("#subcategory-input", Input).value = ""
             self._set_edit_active(False)
