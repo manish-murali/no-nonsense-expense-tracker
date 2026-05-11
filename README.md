@@ -65,7 +65,7 @@ Drop your PDF bank statements into a folder and the app reads them automatically
 It handles password-protected PDFs, skips files it has already imported (no duplicates),
 and supports multiple accounts at the same time.
 
-Supported banks: SBI Savings, Axis Bank Savings, SBI Gold Loan, CBI Education Loan.
+Currently supported banks: SBI , Axis, CBI.
 
 
 ### Smart Auto-Categorisation
