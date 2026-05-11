@@ -328,7 +328,7 @@ Running `python cli.py category apply` re-applies all rules to existing transact
 
     {
       "IRCTCTOU":  "IRCTC",
-      "JAYARAMA":  "Jayaraman Broker"
+      "JD":  "John Doe"
     }
 
 Applied at import time via `apply_alias(counterparty)`.
