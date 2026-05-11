@@ -4,6 +4,7 @@ tracker.db-wal
 config.json
 categories.json
 display_name.json
+aliases.json
 ai_config.json
 
 # Statement PDFs — keep folder structure, ignore the files
