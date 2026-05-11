@@ -65,12 +65,19 @@ No accounts, no cloud, and no internet required. All financial records are store
 
 ## 3. Screenshots & Interface Overview
 
-The app has four tabs, switchable with keyboard keys 1 through 4:
+The app has four screens:
+#### Overview: Balances, monthly chart, recent transactions
+<img width="2739" height="1514" alt="Overview (1)" src="https://github.com/user-attachments/assets/eef78d6b-6b85-468d-b3b5-4154ad911a2c" />
 
-  [1] Overview          — Balances, monthly chart, recent transactions
-  [2] Expenses & Trends — Category breakdown, top merchants, transaction detail
-  [3] Ask AI            — Chat with your transaction data
-  [4] Transaction Log   — Full searchable, editable transaction table
+#### Expenses & Trends: Category breakdown, top merchants, transaction detail
+<img width="2739" height="1514" alt="Expenses   Trends (1)" src="https://github.com/user-attachments/assets/01b0fff7-91c7-4a64-a3ee-b10ca1b8245d" />
+
+#### Ask AI:Chat with your bank statements
+<img width="2739" height="1514" alt="Al Chatbot (1)" src="https://github.com/user-attachments/assets/5259bff8-1036-49bb-9868-c25a3e5aa9f8" />
+
+#### Transaction Log Full searchable, editable transaction table
+<img width="2739" height="1514" alt="transaction log (1)" src="https://github.com/user-attachments/assets/3380f5a8-a319-4a9c-bc6a-5f2718a81f83" />
+
 
 Navigation:
   - Press 1, 2, 3, or 4 to switch tabs instantly
