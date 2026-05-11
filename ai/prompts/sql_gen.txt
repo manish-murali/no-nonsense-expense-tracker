@@ -18,7 +18,7 @@ TABLE: savings_transactions
   counterparty     TEXT    -- raw merchant/person name from the bank
   display_name       TEXT    -- user-set friendly name (may be NULL)
   category         TEXT    -- e.g. 'Food & Dining', 'Transport', 'Salary', 'Uncategorized'
-  subcategory      TEXT    -- user override for category (may be NULL)
+  tag      TEXT    -- user override for category (may be NULL)
   raw_details      TEXT    -- full raw description from bank statement
 
 TABLE: loan_transactions
@@ -60,7 +60,7 @@ TABLE: accounts
     CORRECT:   WHERE direction='DEBIT' AND (LOWER(counterparty) LIKE '%x%' OR LOWER(display_name) LIKE '%x%')
     WRONG:     WHERE LOWER(counterparty) LIKE '%x%' OR LOWER(display_name) LIKE '%x%' AND direction='DEBIT'
     The direction/date filter must ALWAYS come before the parenthesised OR block.
-10. Effective category   → COALESCE(subcategory, category)
+10. Effective category   → COALESCE(tag, category)
 11. Limit results to 20 rows unless the question asks for more.
 12. Always alias aggregated columns: SUM(debit) AS total_spent, COUNT(*) AS count, etc.
 13. Round monetary values: ROUND(SUM(debit), 2) AS total_spent.
@@ -87,7 +87,7 @@ WHERE direction='DEBIT'
 
 Q: What are my biggest expenses this month?
 SELECT date, COALESCE(display_name, counterparty) AS merchant, ROUND(debit, 2) AS amount,
-       COALESCE(subcategory, category) AS category
+       COALESCE(tag, category) AS category
 FROM savings_transactions
 WHERE direction='DEBIT'
   AND strftime('%Y-%m', date_iso) = strftime('%Y-%m', 'now')
@@ -102,7 +102,7 @@ FROM savings_transactions
 WHERE direction='CREDIT'
   AND (counterparty LIKE '%salary%' OR display_name LIKE '%salary%'
        OR raw_details LIKE '%salary%' OR category LIKE '%salary%'
-       OR subcategory LIKE '%salary%' OR transaction_type='NEFT')
+       OR tag LIKE '%salary%' OR transaction_type='NEFT')
 GROUP BY month, counterparty
 ORDER BY month DESC
 LIMIT 12;
@@ -110,7 +110,7 @@ LIMIT 12;
 Q: Show all credits / income I have received
 SELECT date, COALESCE(display_name, counterparty) AS from_whom,
        ROUND(credit, 2) AS amount, transaction_type,
-       COALESCE(subcategory, category) AS category
+       COALESCE(tag, category) AS category
 FROM savings_transactions
 WHERE direction='CREDIT'
 ORDER BY date_iso DESC
@@ -142,7 +142,7 @@ WHERE (account_name, date_iso) IN (
 );
 
 Q: Break down my spending by category this month.
-SELECT COALESCE(subcategory, category) AS category,
+SELECT COALESCE(tag, category) AS category,
        ROUND(SUM(debit), 2) AS total_spent,
        COUNT(*) AS transactions
 FROM savings_transactions

@@ -30,19 +30,19 @@ class TransactionLogTab(Vertical):
         # Edit panel — always visible, content adapts to clicked column
         with Horizontal(id="txn-edit-panel"):
             yield Static(
-                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]",
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Tag[/] cell to edit[/]",
                 id="txn-edit-info"
             )
-            yield Input(placeholder="Click a cell to edit...", id="subcategory-input")
-            yield Button("Save",  id="save-subcategory",  variant="primary")
-            yield Button("Clear", id="clear-subcategory", variant="default")
+            yield Input(placeholder="Click a cell to edit...", id="tag-input")
+            yield Button("Save",  id="save-tag",  variant="primary")
+            yield Button("Clear", id="clear-tag", variant="default")
 
     def on_mount(self) -> None:
         self._current_account_type: str | None   = None
         self._current_direction: str | None      = None
         self._selected_txn_id: str | None        = None
         self._selected_counterparty: str | None  = None
-        self._edit_mode: str | None              = None   # "alias" | "category" | "subcategory"
+        self._edit_mode: str | None              = None   # "alias" | "category" | "tag"
         self._rows: list[dict]                   = []
         self._loading: bool                      = False  # suppress cell events during reload
 
@@ -57,9 +57,9 @@ class TransactionLogTab(Vertical):
         self._load(account_type=None, direction=None, search=None)
 
     def _set_edit_active(self, active: bool) -> None:
-        inp  = self.query_one("#subcategory-input", Input)
-        save = self.query_one("#save-subcategory",  Button)
-        clr  = self.query_one("#clear-subcategory", Button)
+        inp  = self.query_one("#tag-input", Input)
+        save = self.query_one("#save-tag",  Button)
+        clr  = self.query_one("#clear-tag", Button)
         inp.disabled  = not active
         save.disabled = not active
         clr.disabled  = not active
@@ -72,7 +72,7 @@ class TransactionLogTab(Vertical):
         table.clear(columns=True)
         table.add_columns("Date", "Account", "Acct Type", "Type", "Dir",
                           "Debit", "Credit", "Counterparty",
-                          "Display Name", "Category", "Subcategory")
+                          "Display Name", "Category", "Tag")
 
         total_debit = total_credit = 0.0
         for r in self._rows:
@@ -87,7 +87,7 @@ class TransactionLogTab(Vertical):
 
             cat_text = Text(r.get("category") or "—")
 
-            subcat = r.get("subcategory")
+            subcat = r.get("tag")
             subcat_text = (Text(f"★ {subcat}", style="magenta bold")
                            if subcat else Text("—", style="dim"))
 
@@ -156,7 +156,7 @@ class TransactionLogTab(Vertical):
                 f"[bold]Alias for:[/] [yellow]{cp}[/]  "
                 f"[dim](updates all rows with this counterparty)[/]"
             )
-            inp = self.query_one("#subcategory-input", Input)
+            inp = self.query_one("#tag-input", Input)
             inp.placeholder = "Clean name (e.g. Zomato, Dad, Self Transfer)..."
             inp.value       = row.get("merchant_name") or ""
             self._set_edit_active(True)
@@ -168,29 +168,29 @@ class TransactionLogTab(Vertical):
                 f"[bold]Category for:[/] [cyan]{cp}[/]  "
                 f"[dim](updates all rows with this counterparty + saves to categories.json)[/]"
             )
-            inp = self.query_one("#subcategory-input", Input)
+            inp = self.query_one("#tag-input", Input)
             inp.placeholder = "Category (e.g. Food & Dining, Rent, Transport)..."
             inp.value       = row.get("category") or ""
             self._set_edit_active(True)
 
         elif col == self._COL_SUBCATEGORY:
-            self._edit_mode = "subcategory"
+            self._edit_mode = "tag"
             cp = (row.get("merchant_name") or row.get("counterparty") or "—")[:30]
             self.query_one("#txn-edit-info", Static).update(
-                f"[bold]Subcategory:[/] [magenta]{row['date']}  {cp}[/]  "
+                f"[bold]Tag:[/] [magenta]{row['date']}  {cp}[/]  "
                 f"[dim](this transaction only)[/]"
             )
-            inp = self.query_one("#subcategory-input", Input)
+            inp = self.query_one("#tag-input", Input)
             inp.placeholder = "Override (e.g. Salary, Car Insurance, Dad's Rent)..."
-            inp.value       = row.get("subcategory") or ""
+            inp.value       = row.get("tag") or ""
             self._set_edit_active(True)
 
         else:
             self._edit_mode = None
             self.query_one("#txn-edit-info", Static).update(
-                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]"
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Tag[/] cell to edit[/]"
             )
-            self.query_one("#subcategory-input", Input).value = ""
+            self.query_one("#tag-input", Input).value = ""
             self._set_edit_active(False)
 
     # ── Button handling ───────────────────────────────────────────────
@@ -215,8 +215,8 @@ class TransactionLogTab(Vertical):
                 self.query_one("#txn-search", Input).value = ""
             return
 
-        if event.button.id == "save-subcategory":
-            val = self.query_one("#subcategory-input", Input).value.strip()
+        if event.button.id == "save-tag":
+            val = self.query_one("#tag-input", Input).value.strip()
 
             if self._edit_mode == "alias" and self._selected_counterparty:
                 try:
@@ -236,16 +236,16 @@ class TransactionLogTab(Vertical):
                     self.app.notify(f"Error: {e}", severity="error")
                 self._reload_current()
 
-            elif self._edit_mode == "subcategory" and self._selected_txn_id:
+            elif self._edit_mode == "tag" and self._selected_txn_id:
                 try:
-                    db.set_subcategory(self._selected_txn_id, val or None)
-                    self.app.notify("Subcategory saved", severity="information")
+                    db.set_tag(self._selected_txn_id, val or None)
+                    self.app.notify("Tag saved", severity="information")
                 except Exception as e:
                     self.app.notify(f"Error: {e}", severity="error")
                 self._reload_current()
             return
 
-        if event.button.id == "clear-subcategory":
+        if event.button.id == "clear-tag":
             if self._edit_mode == "alias" and self._selected_counterparty:
                 try:
                     add_alias(self._selected_counterparty, "")
@@ -253,7 +253,7 @@ class TransactionLogTab(Vertical):
                     self.app.notify("Alias cleared", severity="information")
                 except Exception as e:
                     self.app.notify(f"Error: {e}", severity="error")
-                self.query_one("#subcategory-input", Input).value = ""
+                self.query_one("#tag-input", Input).value = ""
                 self._reload_current()
 
             elif self._edit_mode == "category" and self._selected_counterparty:
@@ -262,16 +262,16 @@ class TransactionLogTab(Vertical):
                     self.app.notify("Category cleared", severity="information")
                 except Exception as e:
                     self.app.notify(f"Error: {e}", severity="error")
-                self.query_one("#subcategory-input", Input).value = ""
+                self.query_one("#tag-input", Input).value = ""
                 self._reload_current()
 
-            elif self._edit_mode == "subcategory" and self._selected_txn_id:
+            elif self._edit_mode == "tag" and self._selected_txn_id:
                 try:
-                    db.set_subcategory(self._selected_txn_id, None)
-                    self.app.notify("Subcategory cleared", severity="information")
+                    db.set_tag(self._selected_txn_id, None)
+                    self.app.notify("Tag cleared", severity="information")
                 except Exception as e:
                     self.app.notify(f"Error: {e}", severity="error")
-                self.query_one("#subcategory-input", Input).value = ""
+                self.query_one("#tag-input", Input).value = ""
                 self._reload_current()
             return
 

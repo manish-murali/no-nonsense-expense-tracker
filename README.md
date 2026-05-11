@@ -641,13 +641,13 @@ All data is stored in a single SQLite file: tracker.db
     raw_details       TEXT    Full unparsed string from bank statement
     display_name        TEXT    User-set clean name (NULL if not set)
     category          TEXT    Auto-assigned from categories.json rules
-    subcategory       TEXT    Manual per-transaction override (NULL if not set)
+    tag       TEXT    Manual per-transaction override (NULL if not set)
     imported_at       TEXT    datetime('now') at import time
 
 ### loan_transactions
 
     Similar to savings_transactions.
-    No counterparty, display_name, category, subcategory columns.
+    No counterparty, display_name, category, tag columns.
     Has extra_data TEXT (JSON) for bank-specific loan metadata.
 
 ### accounts

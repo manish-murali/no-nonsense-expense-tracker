@@ -73,7 +73,7 @@ _SAVINGS_DDL = """
         raw_details       TEXT,
         display_name      TEXT,
         category          TEXT,
-        subcategory       TEXT,
+        tag               TEXT,
         imported_at       TEXT DEFAULT (datetime('now'))
     );
 """
@@ -138,7 +138,7 @@ def init_db(db_path: Path | None = None) -> None:
 
     _migrate_drop_id(conn, db_path)
     _migrate_date_format(conn)
-    _migrate_add_subcategory(conn)
+    _migrate_add_tag(conn)
     _migrate_conversations(conn)
     conn.close()
 
@@ -195,14 +195,23 @@ def _migrate_date_format(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def _migrate_add_subcategory(conn: sqlite3.Connection) -> None:
-    """One-time migration: add subcategory and display_name columns if absent."""
+def _migrate_add_tag(conn: sqlite3.Connection) -> None:
+    """One-time migration: add tag and display_name columns if absent."""
     cols = [r[1] for r in conn.execute(
         "PRAGMA table_info(savings_transactions)"
     ).fetchall()]
-    if "subcategory" not in cols:
+    if "subcategory" in cols and "tag" in cols:
+        # Both exist (transitional) — copy data across, old column stays harmless
         conn.execute(
-            "ALTER TABLE savings_transactions ADD COLUMN subcategory TEXT"
+            "UPDATE savings_transactions SET tag = subcategory WHERE subcategory IS NOT NULL AND tag IS NULL"
+        )
+    elif "subcategory" in cols:
+        conn.execute(
+            "ALTER TABLE savings_transactions RENAME COLUMN subcategory TO tag"
+        )
+    elif "tag" not in cols:
+        conn.execute(
+            "ALTER TABLE savings_transactions ADD COLUMN tag TEXT"
         )
     if "alias_name" in cols:
         # Rename legacy column to display_name
@@ -366,7 +375,7 @@ def is_already_imported(file_hash: str, db_path: Path | None = None) -> bool:
     return row is not None
 
 
-# ── Manual alias / subcategory overrides ─────────────────────────────
+# ── Manual alias / tag overrides ─────────────────────────────
 
 def set_alias_for_counterparty(
     counterparty: str,
@@ -406,18 +415,18 @@ def set_category_for_counterparty(
         conn.close()
 
 
-def set_subcategory(
+def set_tag(
     txn_id: str,
-    subcategory: str | None,
+    tag: str | None,
     db_path: Path | None = None,
 ) -> bool:
-    """Set (or clear) the subcategory override for a savings transaction.
-    effective_category = subcategory if set, else category."""
+    """Set (or clear) the tag override for a savings transaction.
+    effective_category = tag if set, else category."""
     conn = _connect(db_path)
     try:
         cur = conn.execute(
-            "UPDATE savings_transactions SET subcategory=? WHERE txn_id=?",
-            (subcategory or None, txn_id)
+            "UPDATE savings_transactions SET tag=? WHERE txn_id=?",
+            (tag or None, txn_id)
         )
         conn.commit()
         return cur.rowcount == 1
@@ -483,7 +492,7 @@ def get_recent_transactions(limit: int = 15, db_path: Path | None = None) -> lis
                COALESCE(display_name, counterparty) AS merchant_name,
                display_name,
                category,
-               subcategory
+               tag
         FROM savings_transactions
         WHERE date_iso GLOB '????-??-??'
         UNION ALL
@@ -494,7 +503,7 @@ def get_recent_transactions(limit: int = 15, db_path: Path | None = None) -> lis
                NULL AS merchant_name,
                NULL AS display_name,
                NULL AS category,
-               NULL AS subcategory
+               NULL AS tag
         FROM loan_transactions
         WHERE date_iso GLOB '????-??-??'
         ORDER BY date_iso DESC
@@ -581,8 +590,8 @@ def get_all_transactions(account_type: str | None = None,
                    COALESCE(debit,0) AS debit, COALESCE(credit,0) AS credit,
                    balance, counterparty, display_name,
                    COALESCE(display_name, counterparty) AS merchant_name,
-                   category, subcategory,
-                   COALESCE(subcategory, category) AS effective_category
+                   category, tag,
+                   COALESCE(tag, category) AS effective_category
             FROM savings_transactions {w}
         """)
         params.extend(p)
@@ -595,7 +604,7 @@ def get_all_transactions(account_type: str | None = None,
                    COALESCE(debit,0) AS debit, COALESCE(credit,0) AS credit,
                    balance, NULL AS counterparty, NULL AS display_name,
                    NULL AS merchant_name, NULL AS category,
-                   NULL AS subcategory, NULL AS effective_category
+                   NULL AS tag, NULL AS effective_category
             FROM loan_transactions {w}
         """)
         params.extend(p)

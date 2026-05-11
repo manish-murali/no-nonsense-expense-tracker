@@ -40,7 +40,7 @@ class OverviewTab(ScrollableContainer):
         # Edit panel — same pattern as Transaction Log
         with Horizontal(id="overview-edit-panel"):
             yield Static(
-                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]",
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Tag[/] cell to edit[/]",
                 id="overview-edit-info"
             )
             yield Input(placeholder="Click a cell to edit...", id="overview-edit-input")
@@ -51,7 +51,7 @@ class OverviewTab(ScrollableContainer):
         self._recent_rows: list[dict]            = []
         self._selected_txn_id: str | None        = None
         self._selected_counterparty: str | None  = None
-        self._edit_mode: str | None              = None   # "alias" | "category" | "subcategory"
+        self._edit_mode: str | None              = None   # "alias" | "category" | "tag"
         self._loading: bool                      = False
 
         panel = self.query_one("#overview-edit-panel")
@@ -161,7 +161,7 @@ class OverviewTab(ScrollableContainer):
         table = self.query_one("#recent-table", DataTable)
         table.clear(columns=True)
         table.add_columns("Date", "Account", "Dir", "Type", "Amount",
-                          "Counterparty", "Display Name", "Category", "Subcategory")
+                          "Counterparty", "Display Name", "Category", "Tag")
 
         self._recent_rows = db.get_recent_transactions(25)
         for r in self._recent_rows:
@@ -175,7 +175,7 @@ class OverviewTab(ScrollableContainer):
 
             cat_text = Text(r.get("category") or "—")
 
-            subcat = r.get("subcategory")
+            subcat = r.get("tag")
             subcat_text = (Text(f"★ {subcat}", style="magenta bold")
                            if subcat else Text("—", style="dim"))
 
@@ -244,21 +244,21 @@ class OverviewTab(ScrollableContainer):
             self._set_edit_active(True)
 
         elif col == self._COL_SUBCATEGORY:
-            self._edit_mode = "subcategory"
+            self._edit_mode = "tag"
             cp = (row.get("merchant_name") or row.get("counterparty") or "—")[:30]
             self.query_one("#overview-edit-info", Static).update(
-                f"[bold]Subcategory:[/] [magenta]{row['date']}  {cp}[/]  "
+                f"[bold]Tag:[/] [magenta]{row['date']}  {cp}[/]  "
                 f"[dim](this transaction only)[/]"
             )
             inp = self.query_one("#overview-edit-input", Input)
             inp.placeholder = "Override (e.g. Salary, Car Insurance, Dad's Rent)..."
-            inp.value       = row.get("subcategory") or ""
+            inp.value       = row.get("tag") or ""
             self._set_edit_active(True)
 
         else:
             self._edit_mode = None
             self.query_one("#overview-edit-info", Static).update(
-                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Subcategory[/] cell to edit[/]"
+                "[dim]← Click [yellow]Display Name[/], [cyan]Category[/] or [magenta]Tag[/] cell to edit[/]"
             )
             self.query_one("#overview-edit-input", Input).value = ""
             self._set_edit_active(False)
@@ -287,10 +287,10 @@ class OverviewTab(ScrollableContainer):
                     self.app.notify(f"Error: {e}", severity="error")
                 self._load_recent()
 
-            elif self._edit_mode == "subcategory" and self._selected_txn_id:
+            elif self._edit_mode == "tag" and self._selected_txn_id:
                 try:
-                    db.set_subcategory(self._selected_txn_id, val or None)
-                    self.app.notify("Subcategory saved", severity="information")
+                    db.set_tag(self._selected_txn_id, val or None)
+                    self.app.notify("Tag saved", severity="information")
                 except Exception as e:
                     self.app.notify(f"Error: {e}", severity="error")
                 self._load_recent()
@@ -315,10 +315,10 @@ class OverviewTab(ScrollableContainer):
                 self.query_one("#overview-edit-input", Input).value = ""
                 self._load_recent()
 
-            elif self._edit_mode == "subcategory" and self._selected_txn_id:
+            elif self._edit_mode == "tag" and self._selected_txn_id:
                 try:
-                    db.set_subcategory(self._selected_txn_id, None)
-                    self.app.notify("Subcategory cleared", severity="information")
+                    db.set_tag(self._selected_txn_id, None)
+                    self.app.notify("Tag cleared", severity="information")
                 except Exception as e:
                     self.app.notify(f"Error: {e}", severity="error")
                 self.query_one("#overview-edit-input", Input).value = ""

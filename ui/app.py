@@ -78,7 +78,7 @@ App.dark-theme #overview-edit-panel { background: #161b22; }
 #txn-table         { margin: 0 2 0 2; height: 1fr; }
 #txn-edit-panel    { height: 4; padding: 0 2; align: left middle; }
 #txn-edit-info     { width: 1fr; padding: 0 1; }
-#subcategory-input { width: 35; margin: 0 1; }
+#tag-input { width: 35; margin: 0 1; }
 #txn-edit-panel Button { min-width: 8; margin: 0 1; }
 #overview-edit-panel    { height: 4; padding: 0 2; align: left middle; margin: 0 2; }
 #overview-edit-info     { width: 1fr; padding: 0 1; }
