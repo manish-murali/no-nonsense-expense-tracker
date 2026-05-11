@@ -10,20 +10,10 @@ Everything runs on your own computer. Your bank data never leaves your machine.
 
 ## 1. What This App Does
 
-Most people have no idea where their money goes each month. Bank apps show raw
-transactions with ugly merchant codes like "IRCTCTOU" or "POS 441892 ZOMATO". They
-don't categorise, search, or explain anything.
+Tracking your money shouldn't mean sacrificing your privacy or being locked behind a paywall. Most apps prioritize flashy, complicated visuals over what actually matters: clear visibility and total data security.
 
-This app fixes that. You drop your bank statement PDFs into a folder, run one command,
-and within seconds every transaction is:
+This app solves that by transforming cryptic bank statements into a clean, actionable view of your finances. By accurately parsing your data and keeping it strictly on your own hardware, you get a private, organized look at where your money goes. You stay in total control easily refining categories where needed and using a local AI assistant to ask questions about your money in plain English.
 
-  - Parsed and stored in a local database
-  - Automatically categorised (Food, Transport, Salary, etc.)
-  - Given a clean, readable merchant name
-  - Searchable and filterable in a visual interface
-  - Queryable in plain English ("How much did I spend on Zomato last month?")
-
-No subscription. No cloud. No sharing your financial data with anyone.
 
 
 ---
@@ -40,54 +30,34 @@ and supports multiple accounts at the same time.
 Currently supported banks: SBI, Axis, CBI.
 
 
-### Smart Auto-Categorisation
-Every transaction is automatically assigned a category based on who you paid.
-Zomato becomes "Food & Dining". Netflix becomes "Subscriptions". Airtel becomes "Telecom".
-You can add your own rules and change any category at any time.
+
+### Smart Categorisation
+Transactions are auto-tagged (e.g., Zomato → Food). If the machine needs help, the interface is built for instant manual corrections.
 
 
-### Clean Display Names
-Banks display ugly codes like "IRCTCTOU" or "OGS (INDIA) PVT LTD (G3-ITP-".
-The display name system lets you replace these with readable names like "IRCTC" or "Optum".
-Once set, the clean name shows everywhere and future imports use it automatically.
+### Readable Merchant Name
+Manually convert messy bank codes like IRCTCTOU into clean names like IRCTC. Once updated, the name changes across your entire history.
+No nonsense essential Widgets
+A no-nonsense dashboard focused on utility. Simple widgets track:
+•	Account & Loan Balances
+•	Spending vs. Income
+•	Recent Transactions & Category Trends
 
 
-### Interactive Dashboard (Overview Tab)
-See all your account balances on one screen, a bar chart of spending vs income
-for the last 3 months, and your 25 most recent transactions — all at a glance.
+### Master Ledger
+A master list to search, filter, and edit your data. Updating a category or name here reflects everywhere in the app.
 
 
-### Spending Trends (Expenses & Trends Tab)
-A visual breakdown of your spending by category with bar charts.
-Click any merchant to see every transaction you've had with them.
+### Grannular Tagging
+Add specific tags to individual transactions (e.g., "Birthday Gift") without affecting the broader category rules.
 
 
-### Full Transaction Log
-Browse all transactions with search and filter. Filter by Credits, Debits,
-Savings accounts, or Loans. Search by merchant name, date, or transaction type.
-Click any Display Name, Category, or Tag cell to edit it directly.
+### Local AI Chat
+Ask financial questions in plain English. Powered by Ollama, the AI runs 100% on your hardware. No data ever leaves your computer.
 
 
-### Per-Transaction Tags
-If the automatic category isn't specific enough, you can add a Tag to any individual
-transaction. Example: Category = "Shopping", Tag = "Birthday gift".
-Tags only change that one transaction — not all of them.
-
-
-### Ask AI (Local, Private)
-Ask questions about your money in plain English and get answers in plain English.
-"How much did I spend on Zomato?" → "You spent ₹2,345 on Zomato across 12 transactions."
-The AI runs entirely on your computer using Ollama. Your data never leaves your machine.
-The conversation is remembered between sessions.
-
-
-### Dark Mode / Light Mode
-Toggle between dark and light themes any time with the T key.
-
-
-### 100% Private and Local
-No accounts. No internet required (except to download Ollama once).
-All data lives in a single SQLite file (tracker.db) on your computer.
+### Local-First
+No accounts, no cloud, and no internet required. All financial records are stored in a single local file (tracker.db, SQL Lite database) that you control.
 
 
 ---
