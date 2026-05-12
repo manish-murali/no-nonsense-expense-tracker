@@ -1,4 +1,4 @@
-# Personal Expense Tracker
+# No-nonsense Expense Tracker
 
 A private, local-first personal finance tool that reads your bank statements (PDF),
 organises all your transactions, and lets you ask questions about your money in plain
