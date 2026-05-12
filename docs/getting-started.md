@@ -21,8 +21,8 @@ You need Python 3.11 or newer. If you don't have it, download it from python.org
 If you received this as a folder, skip this step.
 If you're cloning from GitHub:
 
-    git clone https://github.com/manish-murali/expense_tracker.git
-    cd expense_tracker
+    git clone https://github.com/manish-murali/no-nonsense-expense-tracker.git
+    cd no-nonsense-expense-tracker
 
 
 ---
